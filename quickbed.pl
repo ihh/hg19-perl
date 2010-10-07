@@ -43,9 +43,8 @@ for_columns ($trackdb,
 	     \%trackdbCols,
 	     sub {
 		 my ($rowRef) = @_;
-		 if ($rowRef->{'type'} =~ /^bed\b/) {
+		 if ($rowRef->{'type'} =~ /^(bed|genepred)\b/) {   # allow bed.* or genepred.* tracks
 		     my $tableName = $rowRef->{'tableName'};
-		     warn $tableName;
 		     $trackdesc{$tableName} = $rowRef->{'shortLabel'};
 		     push @sql, $tableName;
 		 }

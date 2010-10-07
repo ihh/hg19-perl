@@ -147,6 +147,7 @@ sub make_bed {
     # add default handlers and check for missing fields
     my @missing;
     if (defined $handlerRef) {
+	$handlerRef = { %$handlerRef };  # make a copy
 	for my $bedFieldName (@bedFieldNames) {
 	    if (!defined($handlerRef->{$bedFieldName})) {
 		if (defined ($name2col{$bedFieldName})) {

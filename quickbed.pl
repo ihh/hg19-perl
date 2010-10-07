@@ -144,7 +144,7 @@ sub make_bed {
     # get the column name->index map
     my %name2col = name2column_map ($table);
 
-    # add default handlers
+    # add default handlers and check for missing fields
     if (defined $handlerRef) {
 	for my $bedFieldName (@bedFieldNames) {
 	    if (!defined($handlerRef->{$bedFieldName})) {
@@ -155,6 +155,11 @@ sub make_bed {
 		}
 	    }
 	}
+	my @missing = grep (!defined($handlerRef->{$_}), @bedRequired);
+	die "Missing BED handlers: @missing" if @missing;
+    } else {
+	my @missing = grep (!defined($name2col{$_}), @bedRequired);
+	die "Missing BED handlers: @missing" if @missing;
     }
 
     # create BED file
@@ -166,13 +171,20 @@ sub make_bed {
 		 \%name2col,
 		 sub {
 		     my ($tableRowRef) = @_;
+		     # use handlers (if available) to populate the BED hash, or just copy everything across
 		     my @bedFields = map (defined($handlerRef)
 					  ? &{$handlerRef->{$_}} ($tableRowRef)
 					  : $tableRowRef->{$_},
 					  @bedFieldNames);
 		     while (@bedFields && !defined($bedFields[$#bedFields])) { pop @bedFields }
-		     # could check that required fields are all defined here, I guess...
-		     print BED join (" ", map (defined() ? $_ : ".", @bedFields)), "\n";
+		     # check that required fields are all defined
+		     my @missing = map ($bedRequired[$_], grep (!defined($bedFields[$_]), 0..$#bedRequired));
+		     if (@missing) {
+			 warn "Missing BED fields: @missing";
+		     } else {
+			 # print
+			 print BED join (" ", map (defined() ? $_ : ".", @bedFields)), "\n";
+		     }
 		 });
     close BED or die "$bedfile: $!";
 }

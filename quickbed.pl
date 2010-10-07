@@ -145,6 +145,7 @@ sub make_bed {
     my %name2col = name2column_map ($table);
 
     # add default handlers and check for missing fields
+    my @missing;
     if (defined $handlerRef) {
 	for my $bedFieldName (@bedFieldNames) {
 	    if (!defined($handlerRef->{$bedFieldName})) {
@@ -155,11 +156,14 @@ sub make_bed {
 		}
 	    }
 	}
-	my @missing = grep (!defined($handlerRef->{$_}), @bedRequired);
-	die "Missing BED handlers: @missing" if @missing;
+	@missing = grep (!defined($handlerRef->{$_}), @bedRequired);
     } else {
-	my @missing = grep (!defined($name2col{$_}), @bedRequired);
-	die "Missing BED handlers: @missing" if @missing;
+	@missing = grep (!defined($name2col{$_}), @bedRequired);
+    }
+
+    if (@missing) {
+	warn "Dropping table $table because I don't know how to generate the following BED field(s): @missing\n";
+	return;
     }
 
     # create BED file

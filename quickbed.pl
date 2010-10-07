@@ -11,11 +11,21 @@ my @bedRequired = qw(chrom chromStart chromEnd);
 my @bedOptional = qw(name score strand thickStart thickEnd itemRgb blockCount blockSizes blockStarts);
 my @bedFieldNames = (@bedRequired, @bedOptional);
 
-# create customized handlers for particular tables (functions that map the table hashref to the BED hashref)
+# create customized handlers for particular tables (functions that map the table column=>value hashref to individual BED fields)
 my %tableHandler =
     ("refGene" => {
-	"thickStart" => sub { shift->{"txStart"} },
-	"thickEnd" => sub { shift->{"txEnd"} },
+	"chromStart" => sub { shift->{"txStart"} },
+	"chromEnd" => sub { shift->{"txEnd"} },
+	"thickStart" => sub { shift->{"cdsStart"} },
+	"thickEnd" => sub { shift->{"cdsEnd"} },
+	"blockCount" => sub { shift->{"exonCount"} },
+	"blockStarts" => sub { shift->{"exonStarts"} },
+	"blockSizes" => sub {
+	    my ($rowRef) = @_;
+	    my @exonStarts = split (/,/, $rowRef->{"exonStarts"});
+	    my @exonEnds = split (/,/, $rowRef->{"exonEnds"});
+	    return join (",", map ($exonEnds[$_] - $exonStarts[$_], 0..$#exonEnds));
+	},
      },
     );
 

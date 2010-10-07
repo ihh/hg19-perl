@@ -45,15 +45,16 @@ for_columns ($trackdb,
 		 my ($rowRef) = @_;
 		 if ($rowRef->{'type'} =~ /^bed\b/) {
 		     my $tableName = $rowRef->{'tableName'};
+		     warn $tableName;
 		     $trackdesc{$tableName} = $rowRef->{'shortLabel'};
 		     push @sql, $tableName;
 		 }
 	     });
 
 # check that commandline-named BED files are there
-for my $file (@ARGV) {
-    if (!defined $trackdesc{$file}) {
-	warn "Table $file not found in $trackdb\n";
+for my $table (@ARGV) {
+    if (!defined $trackdesc{$table}) {
+	warn "Table $table not found in $trackdb\n";
     }
 }
 

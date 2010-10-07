@@ -24,7 +24,7 @@ my %tableHandler =
 	    my ($rowRef) = @_;
 	    my @exonStarts = split (/,/, $rowRef->{"exonStarts"});
 	    my @exonEnds = split (/,/, $rowRef->{"exonEnds"});
-	    return join (",", map ($exonEnds[$_] - $exonStarts[$_], 0..$#exonEnds));
+	    return join ("", map (($exonEnds[$_] - $exonStarts[$_]) . ",", 0..$#exonEnds));
 	},
      },
     );

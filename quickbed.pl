@@ -16,10 +16,10 @@ my $trackdb = "trackDb";
 # closedir DIR;
 
 # Find all the BED files in trackDb.txt.gz
-my @trackdbCols = name2column_list ("$trackdb.sql", qw(tableName shortLabel type));
+my @trackdbCols = name2column_list ($trackdb, qw(tableName shortLabel type));
 my %trackdesc;
 my @sql;
-for_columns ("$trackdb.txt.gz",
+for_columns ($trackdb,
 	     \@trackdbCols,
 	     sub {
 		 my ($tableName, $shortLabel, $type) = @_;
@@ -38,25 +38,20 @@ for my $file (@ARGV) {
 
 # loop over all BED files (or all those named on command line)
 local $_;
-for my $sql (@sql) {
-    my ($sqlfile, $txtgzfile, $bedfile) = map ("$hg19dir/$sql.$_", qw(sql txt.gz bed));
-
+TABLE: for my $sql (@sql) {   # $sql = name of table (yes, bad choice of variable name)
     if (@ARGV && !grep ($_ eq $sql, @ARGV)) {
 #	warn "$sql not mentioned in argument list; skipping\n";
 	next;
     }
 
-    unless (-e $txtgzfile) {
-	warn "$txtgzfile does not exist; skipping\n";
-	next;
+    for my $filename (map ("$hg19dir/$sql.$_", qw(sql txt.gz bed))) {
+	unless (-e $filename) {
+	    warn "$filename does not exist; skipping\n";
+	    next TABLE;
+	}
     }
 
-    if (-e $bedfile) {
-	warn "$bedfile already exists; skipping\n";
-	next;
-    }
-
-    my %name2col = name2column_map ($sqlfile, @bedRequired, @bedOptional);
+    my %name2col = name2column_map ($sql, @bedRequired, @bedOptional);
     my @missing = grep(!defined($name2col{$_}), @bedRequired);
     if (@missing) {
 	warn "$sql does not have required column(s): @missing\n";
@@ -67,18 +62,13 @@ for my $sql (@sql) {
     while (!defined($order[$#order])) { pop @order }
 
     warn "Converting $txtgzfile to $bedfile\n";
-
-    open BED, ">$bedfile" or die "$bedfile: $!";
-    print BED "track name=$sql description=\"$trackdesc{$sql}\"\n";
-    for_columns ($txtgzfile,
-		 \@order,
-		 sub { print BED join (" ", map (defined() ? $_ : ".", @_)), "\n" });
-    close BED or die "$bedfile: $!";
+    make_bed ($sql);
 }
 
 # subroutine to crudely parse a .sql table description file and return a map from column names to column indices
 sub name2column_map {
-    my ($sqlfile, @colNames) = @_;
+    my ($table, @colNames) = @_;
+    my $sqlfile = "$table.sql";
 
     my @cols;
     local *SQL;
@@ -99,16 +89,16 @@ sub name2column_map {
 
 # wrapper subroutine to return the values of name2column_map as an ordered list
 sub name2column_list {
-    my ($sqlfile, @colNames) = @_;
-    my %n2c = name2column_map ($sqlfile, @colNames);
+    my ($table, @colNames) = @_;
+    my %n2c = name2column_map ($table, @colNames);
     return map ($n2c{$_}, @colNames);
 }
 
 # subroutine to crudely parse a .txt.gz table dump, select the indexed columns, and apply a given subroutine to each row so selected
 sub for_columns {
-    my ($txtgzfile, $orderRef, $func) = @_;
+    my ($table, $orderRef, $func) = @_;
 
-    my $gzip = "gzip -cd $txtgzfile";
+    my $gzip = "gzip -cd $table.txt.gz";
     my $total = `$gzip | wc -l` + 0;
 
     local *TXT;
@@ -135,3 +125,16 @@ sub for_columns {
     close TXT;
 }
 
+# wrapper to print a BED file
+sub make_bed {
+    my ($table, $func) = @_;
+    $func = sub { @_ } unless defined $func;
+    my $bedfile = "$table.bed";
+    local *BED;
+    open BED, ">$bedfile" or die "$bedfile: $!";
+    print BED "track name=$table description=\"$trackdesc{$table}\"\n";
+    for_columns ($table,
+		 \@order,
+		 sub { print BED join (" ", map (defined() ? $_ : ".", &$func(@_))), "\n" });
+    close BED or die "$bedfile: $!";
+}

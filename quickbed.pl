@@ -61,7 +61,7 @@ TABLE: for my $sql (@sql) {   # $sql = name of table (yes, bad choice of variabl
     my @order = map ($name2col{$_}, @bedRequired, @bedOptional);
     while (!defined($order[$#order])) { pop @order }
 
-    warn "Converting $txtgzfile to $bedfile\n";
+    warn "Creating $sql.bed\n";
     make_bed ($sql, \@order);
 }
 

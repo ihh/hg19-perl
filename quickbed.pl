@@ -18,6 +18,7 @@ my %tableHandler =
 	"chromEnd" => sub { shift->{"txEnd"} },
 	"thickStart" => sub { shift->{"cdsStart"} },
 	"thickEnd" => sub { shift->{"cdsEnd"} },
+	"itemRgb" => sub { "255,255,255" },
 	"blockCount" => sub { shift->{"exonCount"} },
 	"blockStarts" => sub { shift->{"exonStarts"} },
 	"blockSizes" => sub {

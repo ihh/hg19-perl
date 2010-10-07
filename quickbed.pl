@@ -162,7 +162,7 @@ sub make_bed {
     }
 
     if (@missing) {
-	warn "Dropping table $table because I don't know how to generate the following BED field(s): @missing\n";
+	warn "Skipping table $table because I don't know how to generate the following BED field(s): @missing\n";
 	return;
     }
 

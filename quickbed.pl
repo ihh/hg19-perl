@@ -44,11 +44,21 @@ TABLE: for my $sql (@sql) {   # $sql = name of table (yes, bad choice of variabl
 	next;
     }
 
-    for my $filename (map ("$hg19dir/$sql.$_", qw(sql txt.gz bed))) {
-	unless (-e $filename) {
-	    warn "$filename does not exist; skipping\n";
-	    next TABLE;
-	}
+    my ($sqlfile, $txtgzfile, $bedfile) = map ("$hg19dir/$sql.$_", qw(sql txt.gz bed));
+
+    unless (-e $sqlfile) {
+	warn "$sqlfile does not exist; skipping\n";
+	next TABLE;
+    }
+
+    unless (-e $txtgzfile) {
+	warn "$sqlfile does not exist; skipping\n";
+	next TABLE;
+    }
+
+    if (-e $bedfile) {
+	warn "$bedfile already exists; skipping\n";
+	next TABLE;
     }
 
     my %name2col = name2column_map ($sql, @bedRequired, @bedOptional);

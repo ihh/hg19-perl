@@ -62,7 +62,7 @@ TABLE: for my $sql (@sql) {   # $sql = name of table (yes, bad choice of variabl
     while (!defined($order[$#order])) { pop @order }
 
     warn "Converting $txtgzfile to $bedfile\n";
-    make_bed ($sql);
+    make_bed ($sql, \@order);
 }
 
 # subroutine to crudely parse a .sql table description file and return a map from column names to column indices
@@ -117,7 +117,7 @@ sub for_columns {
 	    &$func (map (defined() && defined($data[$_])
 			 ? $data[$_]
 			 : undef,
-			 @$orderRef));
+			 defined($orderRef) ? @$orderRef : (0..$#data)));
 	    $line = "";
 	}
 	if (++$lines % 10000 == 0) { warn "(processed $lines/$total lines)\n" }
@@ -127,14 +127,14 @@ sub for_columns {
 
 # wrapper to print a BED file
 sub make_bed {
-    my ($table, $func) = @_;
+    my ($table, $orderRef, $func) = @_;
     $func = sub { @_ } unless defined $func;
     my $bedfile = "$table.bed";
     local *BED;
     open BED, ">$bedfile" or die "$bedfile: $!";
     print BED "track name=$table description=\"$trackdesc{$table}\"\n";
     for_columns ($table,
-		 \@order,
+		 $orderRef,
 		 sub { print BED join (" ", map (defined() ? $_ : ".", &$func(@_))), "\n" });
     close BED or die "$bedfile: $!";
 }

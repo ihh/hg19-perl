@@ -32,10 +32,10 @@ my @sql;
 for_columns ($trackdb,
 	     \%trackdbCols,
 	     sub {
-		 my %row = @_;
-		 if ($row{'type'} =~ /^bed\b/) {
-		     my $tableName = $row{'tableName'};
-		     $trackdesc{$tableName} = $row{'shortLabel'};
+		 my ($rowRef) = @_;
+		 if ($rowRef->{'type'} =~ /^bed\b/) {
+		     my $tableName = $rowRef->{'tableName'};
+		     $trackdesc{$tableName} = $rowRef->{'shortLabel'};
 		     push @sql, $tableName;
 		 }
 	     });

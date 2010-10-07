@@ -127,7 +127,6 @@ sub for_columns {
 	} else {
 	    $line .= $_;
 	    my @data = split /\t/, $line;
-	    die "data[0]=$data[0] name2col{tableName}=".$name2colRef->{"tableName"} if $line =~ /refGene/;
 	    my %data = map (($_ => $data[$name2colRef->{$_}]), keys %$name2colRef);
 	    &$func (\%data);
 	    $line = "";

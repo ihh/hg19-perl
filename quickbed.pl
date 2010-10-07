@@ -138,9 +138,9 @@ sub make_bed {
     for my $bedFieldName (@bedFieldNames) {
 	if (!defined($handlerRef->{$bedFieldName})) {
 	    if (defined ($name2col{$bedFieldName})) {
-		$handlerRef{$bedFieldName} = sub { shift->{$bedFieldName} };
+		$handlerRef->{$bedFieldName} = sub { shift->{$bedFieldName} };
 	    } else {
-		$handlerRef{$bedFieldName} = sub { undef };
+		$handlerRef->{$bedFieldName} = sub { undef };
 	    }
 	}
     }

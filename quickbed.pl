@@ -145,13 +145,14 @@ sub make_bed {
     my %name2col = name2column_map ($table);
 
     # add default handlers
-    $handlerRef = {} unless defined $handlerRef;
-    for my $bedFieldName (@bedFieldNames) {
-	if (!defined($handlerRef->{$bedFieldName})) {
-	    if (defined ($name2col{$bedFieldName})) {
-		$handlerRef->{$bedFieldName} = sub { shift->{$bedFieldName} };
-	    } else {
-		$handlerRef->{$bedFieldName} = sub { undef };
+    if (defined $handlerRef) {
+	for my $bedFieldName (@bedFieldNames) {
+	    if (!defined($handlerRef->{$bedFieldName})) {
+		if (defined ($name2col{$bedFieldName})) {
+		    $handlerRef->{$bedFieldName} = sub { shift->{$bedFieldName} };
+		} else {
+		    $handlerRef->{$bedFieldName} = sub { undef };
+		}
 	    }
 	}
     }
@@ -165,7 +166,10 @@ sub make_bed {
 		 \%name2col,
 		 sub {
 		     my ($tableRowRef) = @_;
-		     my @bedFields = map (&{$handlerRef->{$_}} ($tableRowRef), @bedFieldNames);
+		     my @bedFields = map (defined($handlerRef)
+					  ? &{$handlerRef->{$_}} ($tableRowRef)
+					  : $tableRowRef->{$_},
+					  @bedFieldNames);
 		     while (@bedFields && !defined($bedFields[$#bedFields])) { pop @bedFields }
 		     # could check that required fields are all defined here, I guess...
 		     print BED join (" ", map (defined() ? $_ : ".", @bedFields)), "\n";
